@@ -1,3 +1,4 @@
+import supabase from "./supabase";
 import { getDayRange } from "./utils";
 
-export { getDayRange };
+export { getDayRange, supabase };

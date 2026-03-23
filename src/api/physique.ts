@@ -1,4 +1,4 @@
-import supabase from "@/supabase";
+import { supabase } from "@/lib";
 
 export async function getPhysique() {
   const { data } = await supabase.from("physique").select();

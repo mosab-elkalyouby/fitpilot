@@ -65,7 +65,7 @@ function App() {
 
   return (
     <main>
-      <section className="min-h-screen bg-background text-foreground dark">
+      <section className="min-h-screen bg-background text-foreground dark pb-8">
         <div className="container">
           <header className="flex flex-col justify-center sm:flex-row sm:justify-between sm:items-center gap-3 h-36">
             <div>

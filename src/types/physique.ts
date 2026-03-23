@@ -1,4 +1,4 @@
-export interface Physique {
+export type Physique = {
   imgSrc: string;
   date: string;
-}
+};

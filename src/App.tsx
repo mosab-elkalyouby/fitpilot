@@ -1,20 +1,16 @@
 import { useEffect, useState, useRef } from "react";
-import PhysiqueCard from "./components/common/PhysiqueCard/PhysiqueCard";
-import PhysiqueCardSkeleton from "./components/common/PhysiqueCard/PhysiqueCardSkeleton";
-import PhysiqueCardUpload from "./components/common/PhysiqueCard/PhysiqueCardUpload";
-import type { Physique } from "./types/physique";
-import { getPhysique, postPhysique } from "./api/physique";
+import {
+  PhysiqueCard,
+  PhysiqueCardSkeleton,
+  PhysiqueCardUpload,
+} from "@/components";
+import type { Physique } from "@/types";
+import { getPhysique, postPhysique } from "@/api";
+import { getDayRange } from "@/lib";
 
-const startDate = "2026-03-22";
+const startDate = "2026-03-18";
 
-function getDayNumber(startDate: string) {
-  const now = new Date();
-  const start = new Date(startDate);
-  const diffMs = +now - +start;
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
-}
-
-const days = Array.from({ length: getDayNumber(startDate) + 1 }, (_, i) => {
+const days = Array.from({ length: getDayRange(startDate) + 1 }, (_, i) => {
   const date = new Date(startDate);
   date.setDate(date.getDate() + i);
   return date.toISOString().split("T")[0];
@@ -24,7 +20,6 @@ function App() {
   const [physique, setPhysique] = useState<Physique[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<string>("");
-
   const inputRef = useRef<HTMLInputElement>(null);
 
   const physiqueMap = physique.reduce(
@@ -53,6 +48,7 @@ function App() {
 
   async function onFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+
     if (!file || !selectedDay) return;
 
     try {
@@ -74,8 +70,11 @@ function App() {
           <header className="flex flex-col justify-center sm:flex-row sm:justify-between sm:items-center gap-3 h-36">
             <div>
               <h1 className="text-3xl font-bold">FitPilot</h1>
-              <p className="text-sm text-muted-foreground">
-                Track body photos by date. Missing days stay as add cards.
+              <p className="text-sm text-muted-foreground sm:max-w-3xl">
+                FitPilot is a smart fitness companion that helps you track
+                workouts, monitor progress, and stay consistent with your
+                training goals. Designed to simplify your fitness journey,
+                FitPilot keeps you in control every step of the way.
               </p>
             </div>
           </header>
@@ -86,7 +85,13 @@ function App() {
                 const entry = physiqueMap[day];
 
                 if (entry) {
-                  return <PhysiqueCard key={day} imgSrc={entry.imgSrc} />;
+                  return (
+                    <PhysiqueCard
+                      date={entry.date}
+                      key={day}
+                      imgSrc={entry.imgSrc}
+                    />
+                  );
                 }
 
                 return (

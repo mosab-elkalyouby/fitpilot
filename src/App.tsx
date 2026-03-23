@@ -1,82 +1,77 @@
-import supabase from "./supabase";
 import { useEffect, useState, useRef } from "react";
 import PhysiqueCard from "./components/common/PhysiqueCard/PhysiqueCard";
 import PhysiqueCardSkeleton from "./components/common/PhysiqueCard/PhysiqueCardSkeleton";
 import PhysiqueCardUpload from "./components/common/PhysiqueCard/PhysiqueCardUpload";
+import type { Physique } from "./types/physique";
+import { getPhysique, postPhysique } from "./api/physique";
 
-interface Physique {
-  imgSrc: string;
-}
+const startDate = "2026-03-22";
 
 function getDayNumber(startDate: string) {
   const now = new Date();
   const start = new Date(startDate);
   const diffMs = +now - +start;
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
+
+const days = Array.from({ length: getDayNumber(startDate) + 1 }, (_, i) => {
+  const date = new Date(startDate);
+  date.setDate(date.getDate() + i);
+  return date.toISOString().split("T")[0];
+});
 
 function App() {
   const [physique, setPhysique] = useState<Physique[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedDay, setSelectedDay] = useState<string>("");
+
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const x = getDayNumber("2026-03-3");
-    console.log(x);
+  const physiqueMap = physique.reduce(
+    (acc, item) => {
+      acc[item.date] = item;
+      return acc;
+    },
+    {} as Record<string, Physique>,
+  );
 
-    getPhysique();
-  }, []);
+  const handleUploadClick = (day: string) => {
+    setSelectedDay(day);
+    inputRef.current?.click();
+  };
 
-  async function getPhysique() {
-    const { data } = await supabase.from("physique").select();
-    setPhysique(data || []);
-    setIsLoading(false);
-    console.log(data);
-  }
+  const handleGetPhysique = async () => {
+    try {
+      const physiqueData = await getPhysique();
+      setPhysique(physiqueData || []);
+    } catch (err) {
+      console.error("Error fetching physique:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   async function onFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !selectedDay) return;
 
-    // Upload to Supabase storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("physique")
-      .upload(file.name, file);
-
-    console.log("Upload data:", uploadData);
-    console.log("Upload error:", uploadError);
-
-    if (uploadError) {
-      console.error("Upload error:", uploadError);
-      return;
+    try {
+      await postPhysique(file, selectedDay);
+      await handleGetPhysique();
+    } catch (err) {
+      console.error("Upload failed:", err);
     }
-
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from("physique")
-      .getPublicUrl(uploadData.path);
-
-    console.log("URL data:", urlData);
-
-    // Insert into database
-    const { error: insertError } = await supabase
-      .from("physique")
-      .insert({ imgSrc: urlData.publicUrl });
-
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      return;
-    }
-
-    // Refresh data
-    getPhysique();
   }
+
+  useEffect(() => {
+    handleGetPhysique();
+  }, []);
 
   return (
     <main>
       <section className="min-h-screen bg-background text-foreground dark">
         <div className="container">
-          <header className="flex flex-col justify-center sm:flex-row sm:justify-between sm:items-center gap-3  h-36">
+          <header className="flex flex-col justify-center sm:flex-row sm:justify-between sm:items-center gap-3 h-36">
             <div>
               <h1 className="text-3xl font-bold">FitPilot</h1>
               <p className="text-sm text-muted-foreground">
@@ -86,17 +81,26 @@ function App() {
           </header>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {!isLoading && (
-              <>
-                {physique.map((item, i) => (
-                  <PhysiqueCard key={i} imgSrc={item.imgSrc}></PhysiqueCard>
-                ))}
-                <PhysiqueCardUpload inputRef={inputRef?.current} />
-              </>
-            )}
+            {!isLoading &&
+              days.map((day) => {
+                const entry = physiqueMap[day];
+
+                if (entry) {
+                  return <PhysiqueCard key={day} imgSrc={entry.imgSrc} />;
+                }
+
+                return (
+                  <PhysiqueCardUpload
+                    key={day}
+                    day={day}
+                    onUploadClick={handleUploadClick}
+                  />
+                );
+              })}
+
             {isLoading &&
               Array.from({ length: 4 }).map((_, i) => (
-                <PhysiqueCardSkeleton key={i}></PhysiqueCardSkeleton>
+                <PhysiqueCardSkeleton key={`skeleton-${i}`} />
               ))}
           </div>
 

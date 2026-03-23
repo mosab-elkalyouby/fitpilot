@@ -1,17 +1,18 @@
 import { Card } from "@/components/ui/card";
 
 export default function PhysiqueCardUpload({
-  inputRef,
+  onUploadClick,
+  day,
 }: {
-  inputRef: HTMLInputElement | null;
+  onUploadClick: (day: string) => void;
+  day: string;
 }) {
   return (
     <Card
-      key={-1}
       className="flex justify-center items-center text-center text-muted-foreground h-96 overflow-hidden border border-dashed cursor-pointer"
-      onClick={() => inputRef?.click()}
+      onClick={() => onUploadClick(day)}
     >
-      Import image
+      {day}
     </Card>
   );
 }

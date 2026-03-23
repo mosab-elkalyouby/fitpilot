@@ -1,20 +1,11 @@
 import { Card } from "@/components/ui/card";
 
-export default function PhysiqueCard({
-  key,
-  imgSrc,
-}: {
-  key: number;
-  imgSrc: string;
-}) {
+export default function PhysiqueCard({ imgSrc }: { imgSrc: string }) {
   return (
-    <Card
-      key={key}
-      className="flex justify-center items-center text-center text-muted-foreground h-96 overflow-hidden border"
-    >
+    <Card className="flex justify-center items-center text-center text-muted-foreground h-96 overflow-hidden border">
       <img
         src={imgSrc}
-        alt={`Physique ${key + 1}`}
+        alt={`Physique`}
         className="w-full h-full object-cover"
       />
     </Card>
